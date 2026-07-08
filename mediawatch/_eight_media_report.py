@@ -101,6 +101,51 @@ def count_terms(text, term_dict):
             c[group] = total
     return c
 
+# ─── 人設操作／風向判讀關鍵字庫 ───
+PERSONA_BUILD = [
+    "肯定", "讚", "力挺", "有功", "貢獻", "表率", "突破",
+    "成功", "佳績", "進步", "創新高", "親民", "溫暖",
+    "團結", "捍衛", "保護", "承諾", "落實",
+]
+
+PERSONA_DESTROY = [
+    "雙標", "打臉", "造假", "翻車", "裝瞎", "裝天真",
+    "大雷包", "何不食肉糜", "護航", "邪惡", "可恥",
+    "騙", "謊", "黑心", "包庇", "蓋牌", "無能",
+    "甩鍋", "卸責", "傲慢", "酬庸", "派系", "門神",
+]
+
+PERSONA_QUESTION = [
+    "質疑", "呼籲", "要求", "批", "轟", "酸", "怒",
+    "應說明", "待釐清", "引發討論", "爭議",
+]
+
+def label_persona(text, person_name, title=""):
+    """Label persona engineering direction for a person in given text."""
+    context = (title + " " + text).lower()
+    destroy_score = sum(1 for kw in PERSONA_DESTROY if kw in context)
+    build_score = sum(1 for kw in PERSONA_BUILD if kw in context)
+    question_score = sum(1 for kw in PERSONA_QUESTION if kw in context)
+    
+    if destroy_score > build_score and destroy_score > 0:
+        return "🗑️"
+    if build_score > destroy_score and build_score > 0:
+        return "😇"
+    if question_score > 0:
+        return "⚠️"
+    return "😐"
+
+def label_narrative(text, title=""):
+    """Label narrative steering direction for an event/topic."""
+    context = (title + " " + text).lower()
+    blame_count = sum(1 for kw in ["應負責","咎責","究責","懲處","下台","道歉","打臉","說謊","隱瞞"] if kw in context)
+    factual_count = sum(1 for kw in ["公布","宣布","指出","說明","表示","確認","報告","數據","統計","調查"] if kw in context)
+    if blame_count > factual_count and blame_count > 0:
+        return "🔴"
+    if factual_count > 0:
+        return "🟢"
+    return "🟡"
+
 def extract_titles(html, url_pattern, source_name):
     """Extract article titles and URLs from HTML."""
     articles = []
@@ -235,6 +280,8 @@ for outlet, articles in results.items():
     all_text = ""
     outlet_names = Counter()
     outlet_terms = Counter()
+    outlet_persona = {}  # person → label
+    outlet_articles_text = []  # list of (title, body) for persona labeling
     for a in articles[:15]:  # Top 15 per outlet
         url = a["url"]
         if not url:
@@ -244,18 +291,24 @@ for outlet, articles in results.items():
             all_text += body + "\n"
             outlet_names += count_names(body, PERSON_NAMES)
             outlet_terms += count_terms(body, PARTY_KEYWORDS)
+            outlet_articles_text.append((a["title"], body))
         fetched += 1
         if fetched % 10 == 0:
             print(f"  📄 {fetched}/{total_articles} 篇已處理")
+    # Compute persona labels for top names in this outlet
+    for name, count in outlet_names.most_common(15):
+        combined = " ".join(t + " " + b for t, b in outlet_articles_text)
+        outlet_persona[name] = label_persona(combined, name)
     outlet_fulltext[outlet] = {
         "text": all_text,
         "names": dict(outlet_names.most_common(30)),
         "terms": dict(outlet_terms),
+        "persona": outlet_persona,
     }
 
 # Save fulltext analysis
 with open(os.path.join(OUTDIR, f"fulltext_analysis_{TARGET_DATE}.json"), "w") as f:
-    json.dump({k: {"names": v["names"], "terms": v["terms"]} for k, v in outlet_fulltext.items()}, f, ensure_ascii=False, indent=2)
+    json.dump({k: {"names": v["names"], "terms": v["terms"], "persona": v["persona"]} for k, v in outlet_fulltext.items()}, f, ensure_ascii=False, indent=2)
 print(f"  ✅ 全文分析完成（{fetched} 篇）")
 print()
 
@@ -362,6 +415,21 @@ for name, _ in all_ft_names.most_common(25):
         row.append(str(c))
         total += c
     row.append(str(total))
+    report += "| " + " | ".join(row) + " |\n"
+report += "\n</details>\n\n"
+
+# Persona label table
+report += "<details>\n<summary>🎭 展開人設操作標籤</summary>\n\n"
+report += "各媒體對主要人物的報導傾向（😇正面 🗑️毀滅 ⚠️質疑 😐中性 🔇沉默）：\n\n"
+report += "| 人物 |"
+for src in ["自由時報","聯合報","TVBS","ETtoday","三立","中天","風傳媒"]:
+    report += f" {src[:4]} |"
+report += "\n|" + "|".join(":---:" for _ in range(8)) + "|\n"
+for name, _ in all_ft_names.most_common(15):
+    row = [name]
+    for src in ["自由時報","聯合報","TVBS","ETtoday","三立","中天","風傳媒"]:
+        p = outlet_fulltext.get(src, {}).get("persona", {}).get(name, "🔇")
+        row.append(p)
     report += "| " + " | ".join(row) + " |\n"
 report += "\n</details>\n\n"
 

@@ -180,15 +180,36 @@ HOBBY_POOL = {
 }
 
 # Marriage status by age
+# Real marriage status distribution from MOI 2024 data
 MARRIAGE_PROB = {
-    "0-11":  {"未婚":1.00,"已婚":0,"離婚":0,"鰥寡":0},
-    "12-18": {"未婚":1.00,"已婚":0,"離婚":0,"鰥寡":0},
-    "19-24": {"未婚":0.88,"已婚":0.11,"離婚":0.01,"鰥寡":0},
-    "25-34": {"未婚":0.40,"已婚":0.50,"離婚":0.08,"鰥寡":0.02},
-    "35-44": {"未婚":0.15,"已婚":0.65,"離婚":0.15,"鰥寡":0.05},
-    "45-54": {"未婚":0.08,"已婚":0.65,"離婚":0.18,"鰥寡":0.09},
-    "55-64": {"未婚":0.05,"已婚":0.60,"離婚":0.15,"鰥寡":0.20},
-    "65+":   {"未婚":0.03,"已婚":0.45,"離婚":0.07,"鰥寡":0.45},
+    "0-11":  {"未婚":1.0000, "已婚":0, "離婚":0, "鰥寡":0},
+    "12-18": {"未婚":1.0000, "已婚":0, "離婚":0, "鰥寡":0},
+    "19-24": {"未婚":0.9700, "已婚":0.0266, "離婚":0.0034, "鰥寡":0},
+    "25-34": {"未婚":0.7456, "已婚":0.2392, "離婚":0.0088, "鰥寡":0.0064},
+    "35-44": {"未婚":0.4238, "已婚":0.5466, "離婚":0.0102, "鰥寡":0.0194},
+    "45-54": {"未婚":0.3243, "已婚":0.6250, "離婚":0.0063, "鰥寡":0.0444},
+    "55-64": {"未婚":0.2319, "已婚":0.6967, "離婚":0.0030, "鰥寡":0.0684},
+    "65+":   {"未婚":0.2237, "已婚":0.5875, "離婚":0.0009, "鰥寡":0.1878},
+}
+MARRIAGE_PROB_MALE = {
+    "0-11":  {"未婚":1.0000, "已婚":0, "離婚":0, "鰥寡":0},
+    "12-18": {"未婚":1.0000, "已婚":0, "離婚":0, "鰥寡":0},
+    "19-24": {"未婚":0.9791, "已婚":0.0186, "離婚":0.0023, "鰥寡":0},
+    "25-34": {"未婚":0.7886, "已婚":0.2004, "離婚":0.0074, "鰥寡":0.0036},
+    "35-44": {"未婚":0.4628, "已婚":0.5157, "離婚":0.0097, "鰥寡":0.0118},
+    "45-54": {"未婚":0.3533, "已婚":0.6171, "離婚":0.0070, "鰥寡":0.0226},
+    "55-64": {"未婚":0.2269, "已婚":0.7372, "離婚":0.0038, "鰥寡":0.0321},
+    "65+":   {"未婚":0.1954, "已婚":0.7543, "離婚":0.0014, "鰥寡":0.0489},
+}
+MARRIAGE_PROB_FEMALE = {
+    "0-11":  {"未婚":1.0000, "已婚":0, "離婚":0, "鰥寡":0},
+    "12-18": {"未婚":1.0000, "已婚":0, "離婚":0, "鰥寡":0},
+    "19-24": {"未婚":0.9601, "已婚":0.0353, "離婚":0.0047, "鰥寡":0},
+    "25-34": {"未婚":0.6996, "已婚":0.2808, "離婚":0.0102, "鰥寡":0.0094},
+    "35-44": {"未婚":0.3848, "已婚":0.5775, "離婚":0.0107, "鰥寡":0.0271},
+    "45-54": {"未婚":0.2967, "已婚":0.6325, "離婚":0.0057, "鰥寡":0.0651},
+    "55-64": {"未婚":0.2366, "已婚":0.6588, "離婚":0.0022, "鰥寡":0.1023},
+    "65+":   {"未婚":0.2469, "已婚":0.4507, "離婚":0.0005, "鰥寡":0.3018},
 }
 
 def pick_hobbies(age, sex, occ):
@@ -518,6 +539,11 @@ HH_FAM4_UNMARRIED = [
     "跟爸爸媽媽和阿公住",
     "跟爸爸媽媽和阿嬤住",
 ]
+HH_FAM4_UNMARRIED_SENIOR = [
+    "跟兄弟姊妹同住，互相照顧",
+    "和家人一起住，互相照應",
+    "跟親人同住，生活有個伴",
+]
 HH_FAM5_STUDENT = [
     "在家裡排行老大，底下有弟弟妹妹",
     "是家裡的老大，要幫忙照顧弟弟妹妹",
@@ -526,6 +552,7 @@ HH_FAM5_STUDENT = [
     "在家裡排行中間，上有兄姐下有弟妹",
 ]
 HH_FAM5_UNMARRIED = ["與父母和多位兄弟姊妹同住", "家裡熱鬧，但房間不夠用"]
+HH_FAM5_UNMARRIED_SENIOR = ["和兄弟姊妹同住，家裡熱鬧", "和家人同住，互相有個照應"]
 HH_FAM5_MARRIED = ["大家庭，夫妻加三個以上的孩子", "兒女成群，家裡很熱鬧"]
 HH_FAM5_WIDOWED_SENIOR = ["兒孫滿堂，與子女和孫輩同住", "三代同堂，家裡很熱鬧"]
 HH_FAM5_WIDOWED_YOUNG = ["大家庭，與家人同住", "和父母及兄弟姊妹同住"]
@@ -648,9 +675,13 @@ def infer_background(age, sex, marriage, occ, fam, fam_inc, region, inc, price_t
         pool = HH_FAM3_ELDERLY_UNMARRIED if age in ("55-64","65+") else (HH_FAM3_UNMARRIED_MALE if sex == "男" else HH_FAM3_UNMARRIED_FEMALE)
         parts.append(random.choice(pool))
     elif fam == "4" and marriage == "已婚": parts.append(random.choice(HH_FAM4_MARRIED))
-    elif fam == "4" and marriage == "未婚": parts.append(random.choice(HH_FAM4_UNMARRIED))
+    elif fam == "4" and marriage == "未婚":
+        pool = HH_FAM4_UNMARRIED_SENIOR if age in ("45-54","55-64","65+") else HH_FAM4_UNMARRIED
+        parts.append(random.choice(pool))
     elif fam == "5+" and marriage == "未婚" and occ == "學生": parts.append(random.choice(HH_FAM5_STUDENT))
-    elif fam == "5+" and marriage == "未婚": parts.append(random.choice(HH_FAM5_UNMARRIED))
+    elif fam == "5+" and marriage == "未婚":
+        pool = HH_FAM5_UNMARRIED_SENIOR if age in ("45-54","55-64","65+") else HH_FAM5_UNMARRIED
+        parts.append(random.choice(pool))
     elif fam == "5+" and marriage == "已婚": parts.append(random.choice(HH_FAM5_MARRIED))
     elif age in ("19-24","25-34") and marriage == "離婚" and fam in ("3","4","5+"):
         pool = HH_YOUNG_DIVORCED_MALE if sex == "男" else HH_YOUNG_DIVORCED_FEMALE
@@ -746,7 +777,7 @@ for region, age, sex, weight, count in weighted:
         fam = wchoice(FAMILY_SIZE_PROB.get(age, {"3":1}))
         fam_inc = wchoice(FAMILY_INCOME_PROB.get((inc, occ) if (inc, occ) in FAMILY_INCOME_PROB else ("3-8萬", "服務"), {"3-7萬":1}))
         hobbies = pick_hobbies(age, sex, occ)
-        marriage = wchoice(MARRIAGE_PROB.get(age, {"未婚":1}))
+        marriage = wchoice(MARRIAGE_PROB_MALE.get(age, {"未婚":1})) if sex == "男" else wchoice(MARRIAGE_PROB_FEMALE.get(age, {"未婚":1}))
         # ── 戶籍地 (registered residence) within region ──
         residence = random.choice(REGION_TO_CITIES.get(region, ["其他"]))
         # ── 物價分級 based on residence ──

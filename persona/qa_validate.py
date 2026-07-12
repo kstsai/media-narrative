@@ -48,7 +48,7 @@ for p in data:
     for kw in AMBIGUOUS:
         if kw in story and "離婚" not in story:
             for seg in story.split("。"):
-                if kw in seg and "經濟" not in seg and "離婚" not in seg and "多位" not in seg and "及" not in seg:  # 多位兄弟姊妹 is fine
+                if kw in seg and "經濟" not in seg and "離婚" not in seg and "多位" not in seg and "及" not in seg and "兄弟姊妹" not in seg:  # 多位兄弟姊妹 is fine
                     bad.append((p["name"], kw, seg.strip()))
                     break
 for name, kw, seg in bad[:10]:
@@ -235,6 +235,22 @@ for name, fam in bad[:5]:
     check(False, f"[R19] {fam}人家庭但「一個人過日子」: {name}")
 if not bad:
     print("  [R19] 家庭人數矛盾: ✅ 0 violations")
+
+# ── Rule 20: 45+未婚 + 「跟爸爸媽媽」住 ──
+PARENT_KW = ["跟爸爸媽媽和一個", "跟爸爸媽媽和阿"]
+bad = []
+for p in data:
+    d = p["dimensions"]
+    story = d["background_story"]
+    if d["age"] in ("45-54","55-64","65+") and d["marriage"] == "未婚":
+        for kw in PARENT_KW:
+            if kw in story:
+                bad.append((p["name"], d["age"]))
+                break
+for name, age in bad[:5]:
+    check(False, f"[R20] {age}未婚但說「跟爸媽住」: {name}")
+if not bad:
+    print("  [R20] 中高齡未婚家庭描述: ✅ 0 violations")
 
 print(f"\n{'='*50}")
 if VIOLATIONS:

@@ -1,13 +1,14 @@
-# [RFC] TW Persona Database — 997 個台灣人設模板 for GEO Operator
+# [RFC] TW Persona Database — 1069 個台灣人設模板 for GEO Operator
 
-> 狀態：討論中 · 建立日期：2026-07-03 · 更新日期：2026-07-03
-> 來源：Hermes Slack 對話記錄（thread「新助理消息列」）
+> 狀態：實作中 · 建立日期：2026-07-03 · 最後更新：2026-07-11
+> 最新 tag：`persona-v3.1`
+> 來源：Hermes Slack 對話記錄（thread「persona-db-dev」）
 
 ---
 
 ## 動機
 
-建立一個包含 997 個分層抽樣人設（persona templates）的資料庫，代表台灣 2,300 萬人口結構。
+建立一個包含 **1069 個**分層抽樣人設（persona templates）的資料庫，代表台灣 2,300 萬人口結構。
 
 用途：**GEO（Generative Engine Optimization）Operator** 在回應各領域問題時，能根據問題類型載入對應的人設視角，提問更精準、回答更到位。
 
@@ -35,22 +36,38 @@ GEO Operator 掃描 reference_pre_prompt 庫
 
 ---
 
-## 維度設計（通用底層 12 維度）
+## 維度設計（通用底層 13 維度）
 
 | # | 維度 | 分層 |
 |---|------|------|
 | 1 | 年齡 | 0-11 / 12-18 / 19-24 / 25-34 / 35-44 / 45-54 / 55-64 / 65+ |
 | 2 | 性別 | 男 / 女 |
-| 3 | 區域 | 北北基 / 桃竹苗 / 中彰投 / 雲嘉南 / 高屏 / 宜花東 / 離島 |
-| 4 | 教育 | 高中以下 / 大學 / 研究所以上 |
+| 3 | 區域 | 都會區(六都) / 北部 / 中部 / 南部 / 花東 / 離島 |
+| 4 | 教育 | 國中以下 / 高中 / 大學 / 研究所以上 |
 | 5 | 職業 | 學生 / 科技 / 服務 / 製造 / 教育 / 醫療 / 公務 / 自營 / 家管 / 退休 / 其他 |
-| 6 | 收入 | <3萬 / 3-8萬 / >8萬 / 無收入 |
+| 6 | 個人收入 | <3萬 / 3-8萬 / >8萬 / 無收入 |
 | 7 | 政治傾向 | 泛綠 / 泛藍 / 白/第三勢力 / 無政治傾向 |  (與年齡相關, 未成年不予貼標)
 | 8 | 媒體習慣 | 傳統媒體為主 / 社群為主 / 混合 / 國際來源 |
 | 9 | 家庭口數 | 1 / 2 / 3 / 4 / 5+ |
-| 10 | 家庭可支配所得 | <1萬 / 1-3 萬 / 3-7萬 | 7萬+  |
+| 10 | 家庭可支配所得 | <1萬 / 1-3 萬 / 3-7萬 | 7萬 | 百萬 |
 | 11 | 興趣嗜好 | 打電動 / 追劇 / 閱讀 / 登山 / 遊泳 / 球類 / 逛街購物 / 烹飪 / 園藝 / 泡茶 / 下棋 / 打牌 |
 | 12 | 婚姻狀況 | 未婚 / 已婚 / 離婚 / 鰥寡 |
+| 13 | 戶籍地 | 台北市 / 新北市 / 桃園市 / 台中市 / 台南市 / 高雄市 / 基隆市 / 新竹縣 / 新竹市 / 苗栗縣 / 宜蘭縣 / 彰化縣 / 南投縣 / 雲林縣 / 嘉義市 / 嘉義縣 / 屏東縣 / 花蓮縣 / 台東縣 / 澎湖縣 / 金門縣 / 連江縣 |
+| 14 | 物價分級 | 高 / 中高 / 中 / 低 / 極低 |（基於主計總處113年平均每人月消費支出，影響經濟短語選取權重）|
+| 15 | 家戶所得分級 | 極高 / 高 / 中 / 中低 / 低 |（基於主計總處113年家庭收支調查，調整家庭收入分配）|
+
+### 城市職業加權
+
+Occupation probabilities are adjusted by city to reflect real-world industry clustering:
+
+| 城市 | 職業加權 | 說明 |
+|:-----|:---------|:-----|
+| 新竹縣、新竹市 | 科技↑30% | 竹科效應 |
+| 台北市 | 金融↑20% | 金融中心 |
+| 桃園市 | 製造↑20% | 工業大城 |
+| 台中市、台南市、高雄市 | 製造↑15% | 製造業重鎮 |
+
+Implementation: post-selection redirect (if base occ ≠ target, X% chance to switch).
 
 可依領域疊加 domain-specific 維度：
 - 選舉 → 疊加「投票記錄」、「在地連結感」
@@ -206,9 +223,15 @@ GEO Operator 掃描 reference_pre_prompt 庫
 | 檔案 | 說明 |
 |------|------|
 | `hermesa3/persona/tw-persona-db-rfc.md` | 本文件 |
+| `hermesa3/persona/tw_persona_1069.json` | **最新輸出** — 1069 人設, 16 維度, ~1.4MB |
+| `hermesa3/persona/_generate_997.py` | 產生器（seed=42, target=1069） |
+| `hermesa3/persona/qa_validate.py` | 18 條自動化驗證規則 |
+| `hermesa3/persona/query_persona.py` | 查詢 CLI 工具 |
+| `hermesa3/persona/sample_stratified.py` | 分層抽樣（96 combos, seed=42） |
+| `hermesa3/persona/population_by_region_age_sex_2025.csv` | 6區×8年齡×2性別人口資料 |
 | `hermesa3/persona/tw_persona_prototype_001_v3.json` | Prototype v3 — 高中生「叩莓」 |
 | `hermesa3/persona/tw_persona_prototype_002_engineer.json` | Prototype v2 — 工程師「阿睿」 |
-| `.hermes/persona/issue-tracker.md` | Issue 備份（API token 權限不足） |
+| `hermesa3/persona/MILESTONE-v3.0.md` | v3.0 milestone 文件 |
 
 ---
 
